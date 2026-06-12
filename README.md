@@ -10,7 +10,7 @@ Sistema web que substitui a automação n8n (Google Forms → Sheets → Word �
 - **Supabase** — Postgres (`contratos`), Auth (login) e Storage (`contratos-pdf`)
   - Projeto: `crm-contratos-gprs` (`gszcuwwytikokigezlpw`, região São Paulo)
 - **Puppeteer** (`puppeteer-core` + `@sparticuz/chromium` em produção; `puppeteer` em dev) — HTML → PDF
-- **Resend** — envio de e-mail com anexo
+- **Nodemailer (SMTP UOL Host)** — envio de e-mail com anexo pela caixa do próprio domínio
 - **extenso** — valores e dia por extenso em pt-BR (antes digitados à mão)
 
 ## Rodando localmente
@@ -31,11 +31,14 @@ Acesse http://localhost:3000 — login: `leonvpetri@gmail.com` (senha inicial cr
 | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave publishable do Supabase |
-| `RESEND_API_KEY` | Chave da API do Resend (https://resend.com/api-keys) |
-| `EMAIL_FROM` | Remetente verificado no Resend (`onboarding@resend.dev` para testes) |
+| `SMTP_HOST` | Servidor SMTP (UOL Host: `smtps.uhserver.com`) |
+| `SMTP_PORT` | Porta SMTP (`465` SSL ou `587` STARTTLS) |
+| `SMTP_USER` | Caixa de e-mail completa (ex.: `suporte@alarmesartefinal.com.br`) |
+| `SMTP_PASS` | Senha da caixa de e-mail |
+| `EMAIL_FROM` | Remetente (normalmente igual a `SMTP_USER`) |
 | `ADMIN_EMAIL` | E-mail do administrativo que recebe os contratos |
 
-Sem `RESEND_API_KEY`, o contrato é gerado e salvo normalmente, mas fica com status **"PDF gerado"** (não enviado). Configure a chave e use **Reenviar** na lista.
+Sem as variáveis SMTP, o contrato é gerado e salvo normalmente, mas fica com status **"PDF gerado"** (não enviado). Configure e use **Reenviar** na lista.
 
 ## Estrutura
 

@@ -1,34 +1,48 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+
+// UOL Host: smtps.uhserver.com:465 (SSL), autenticação com a caixa completa.
 
 export async function enviarContratoPorEmail(opts: {
   contratante: string;
   pdf: Buffer;
 }): Promise<{ ok: true } | { ok: false; erro: string }> {
-  const apiKey = process.env.RESEND_API_KEY;
+  const host = process.env.SMTP_HOST;
+  const porta = Number(process.env.SMTP_PORT || 465);
+  const usuario = process.env.SMTP_USER;
+  const senha = process.env.SMTP_PASS;
+  const de = process.env.EMAIL_FROM || usuario;
   const para = process.env.ADMIN_EMAIL;
-  const de = process.env.EMAIL_FROM;
 
-  if (!apiKey || !para || !de) {
+  if (!host || !usuario || !senha || !para) {
     return {
       ok: false,
-      erro: "E-mail não configurado (RESEND_API_KEY / ADMIN_EMAIL / EMAIL_FROM).",
+      erro: "E-mail não configurado (SMTP_HOST / SMTP_USER / SMTP_PASS / ADMIN_EMAIL).",
     };
   }
 
-  const resend = new Resend(apiKey);
-  const { error } = await resend.emails.send({
-    from: `CRM Contratos <${de}>`,
-    to: [para],
-    subject: `Contrato de Monitoramento — ${opts.contratante}`,
-    text: `Segue em anexo o contrato de prestação de serviços de monitoramento gerado para ${opts.contratante}.`,
-    attachments: [
-      {
-        filename: `CONTRATO MONITORAMENTO - ${opts.contratante}.pdf`,
-        content: opts.pdf,
-      },
-    ],
+  const transporter = nodemailer.createTransport({
+    host,
+    port: porta,
+    secure: porta === 465, // 465 = SSL; 587 = STARTTLS
+    auth: { user: usuario, pass: senha },
   });
 
-  if (error) return { ok: false, erro: error.message };
-  return { ok: true };
+  try {
+    await transporter.sendMail({
+      from: `CRM Contratos <${de}>`,
+      to: para,
+      subject: `Contrato de Monitoramento — ${opts.contratante}`,
+      text: `Segue em anexo o contrato de prestação de serviços de monitoramento gerado para ${opts.contratante}.`,
+      attachments: [
+        {
+          filename: `CONTRATO MONITORAMENTO - ${opts.contratante}.pdf`,
+          content: opts.pdf,
+          contentType: "application/pdf",
+        },
+      ],
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+  }
 }
