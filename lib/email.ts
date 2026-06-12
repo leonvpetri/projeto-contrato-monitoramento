@@ -20,11 +20,18 @@ export async function enviarContratoPorEmail(opts: {
     };
   }
 
+  // Antivírus locais (ex.: Avast Mail Shield) interceptam o TLS do SMTP com
+  // certificado próprio. SMTP_TLS_INSECURE=1 relaxa a validação SOMENTE fora
+  // da Vercel (em produção a flag é ignorada e o certificado é sempre validado).
+  const tlsInseguroLocal =
+    process.env.SMTP_TLS_INSECURE === "1" && !process.env.VERCEL;
+
   const transporter = nodemailer.createTransport({
     host,
     port: porta,
     secure: porta === 465, // 465 = SSL; 587 = STARTTLS
     auth: { user: usuario, pass: senha },
+    tls: tlsInseguroLocal ? { rejectUnauthorized: false } : undefined,
   });
 
   try {
